@@ -1,0 +1,39 @@
+function filterHiddenItems(questionnaire) {
+  if (!questionnaire || !questionnaire.item) {
+    console.log("Invalid questionnaire structure");
+    return null; // or handle the error in a way that suits your needs
+  }
+
+  const filterItemsRecursively = (items) => {
+    if (!items || !Array.isArray(items)) {
+      return [];
+    }
+
+    const filteredItems = items.filter(item => {
+      if (item.extension && Array.isArray(item.extension)) {
+        const hiddenExtension = item.extension.find(ext => ext.url === "questionnaire.hidden");
+        if (hiddenExtension && hiddenExtension.valueBoolean === true) {
+          return false; // exclude hidden item
+        }
+      }
+
+      if (item.item && Array.isArray(item.item)) {
+        item.item = filterItemsRecursively(item.item);
+      }
+
+      return true; // include non-hidden item
+    });
+
+    return filteredItems;
+  };
+
+  const filteredItems = filterItemsRecursively(questionnaire.item);
+
+  if (filteredItems.length === 0) {
+    delete questionnaire.item; // delete the item key if its length is 0
+  } else {
+    questionnaire.item = filteredItems;
+  }
+
+  return questionnaire;
+}
